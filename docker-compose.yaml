@@ -1,0 +1,47 @@
+version: '3.3'
+
+services: 
+
+  # Devices simulators (Pub)
+  redis01:
+    image: redis:5.0.5-alpine
+    ports:
+      - "6379:6379"
+
+  redis02:
+    image: redis:5.0.5-alpine
+    ports:
+      - "6380:6379"
+
+  redis03:
+    image: redis:5.0.5-alpine
+    ports:
+      - "6381:6379"
+  
+  # Devices readers (Consumers)
+  app:
+    build: .
+    command: sh -c './wait-for redis01:6379 -- ./wait-for redis02:6379 -- ./wait-for redis03:6379 -- ./devices_reader redis01 redis02 redis03'
+    depends_on:
+      - redis01
+      - redis02
+      - redis03
+      
+  redis_benchmark1:
+    build: ./redis_benchmark
+    image: redis_benchmark
+    command: sh -c './wait-for redis01:6379 -- redis-benchmark -t RPUSH -q -n 1000000000 -h redis01 -p 6379'
+    depends_on:
+      - app
+
+  redis_benchmark2:
+    image: redis_benchmark
+    command: sh -c './wait-for redis02:6379 -- redis-benchmark -t RPUSH -q -n 10000000000 -h redis02 -p 6379'
+    depends_on:
+      - app
+
+  redis_benchmark3:
+    image: redis_benchmark
+    command: sh -c './wait-for redis03:6379 --  redis-benchmark -t RPUSH -q -n 1000000000 -h redis03 -p 6379'
+    depends_on:
+      - app
