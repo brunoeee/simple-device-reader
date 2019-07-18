@@ -2,9 +2,10 @@
 
 ## Get started
 
-## Installation
+## Installation and run
 require: docker/docker-compose
 
+Just need to install docker and run:
 ```bash
 git clone https://github.com/brunoeee/simple-device-reader.git
 cd simple-device-reader
